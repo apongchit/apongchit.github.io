@@ -1,0 +1,79 @@
+---
+title: "Final Project"
+author: "Alex Pongchit"
+date: "5/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Video Game Sales
+
+The video game industry is the largest entertainment industry in the world.  Looking at a list of video game sales from various years could help up determine why this industry is so profitable.
+
+## Data Curation
+
+First we must find a dataset to use in our analysis.  The dataset I will be using: https://www.kaggle.com/gregorut/videogamesales
+
+```{r}
+video_game_tab <- read.csv("/Users/apongchit/Downloads/vgsales.csv")
+
+video_game_tab$Year <- as.POSIXct(strptime(video_game_tab$Year, format='%Y'))
+
+head(video_game_tab)
+```
+
+The dataframe video_game_tab shows the data from the csv file from the above link.  The only data cleaning we have to do is to convert the Year column to a numeric data type.
+
+## Analysis
+
+Now that we have a clean dataset, we can begin our analysis.
+
+First, we could look at if there is a relationship between a game publisher and the game's sales in North America (in millions.) from the top 100 selling games.
+
+```{r}
+library(ggplot2)
+library(sqldf)
+
+publisher_sales = sqldf("select Publisher, sum(NA_Sales) as Sales from video_game_tab where Rank <= 100 group by Publisher")
+
+publisher_sales %>%
+  ggplot(aes(x = Publisher, y = Sales)) +
+  geom_bar(stat = "identity")
+```
+
+Secondly, we could look at if there is a relationship between genre and the game's sales in North America (in millions).
+
+```{r}
+library(ggplot2)
+
+  
+ggplot(video_game_tab, aes(x = Genre, y = NA_Sales)) + geom_bar(stat = "identity")
+```
+
+After examining both bar graphs, we can see that Nintendo has the highest sales out of all the publishers in North America.  We can also see that the action genre has the highest sales out of all the genres in North America.  What's interesting to note is that Nintendo isn't known for making action games.  Some of their best selling products are games such as Mario and Wii Sports.  One reason for this could be because Nintendo has been making games for over 30 years.  This means that older and younger genrations have had a chance to play their games which means that they have high exposure to a larger audience. This makes sense for their high amount of sales.  On other note, it would make sense that action games have the highest sales out of any genre.  The action genre is the most popular genre which again means that it has a larger audience that in turn will have higher sales.
+
+Another area we can examine is the relationship between year and sales.  Again, sales are in millions.
+
+```{r}
+# splits the data into different year ranges
+range <- mutate(video_game_tab, Year_Range = cut(Year, breaks=5))
+range <- split(range, range$Year_Range)
+
+# this plot will reveal any outliers
+ggplot() + 
+  geom_point(data = range[[1]], aes(x = Year, y = NA_Sales), color='green') +
+  geom_point(data = range[[2]], aes(x = Year, y = NA_Sales), color='red') +
+  geom_point(data = range[[3]], aes(x = Year, y = NA_Sales), color='blue') +
+  geom_point(data = range[[4]], aes(x = Year, y = NA_Sales), color='purple') +
+  geom_point(data = range[[5]], aes(x = Year, y = NA_Sales), color='orange') + 
+  geom_smooth(data = video_game_tab, aes(x = Year, y = NA_Sales))
+```
+
+The plot shows the sales for each of the five year ranges that were created.  It should be noted that there are outliers in the year ranges.  When examining the graph we can see that the sales for each range stay relatively consistent with each other.  I've also added a linear regression line to the plot.  This allows us to viusually see the growth of sales through out the year.
+
+# Conclusion
+
+We've looked at a dataset that shows video game sales for the last 40 years.  We have seen the relationship between some of the attributes in the dataset such as genre, publisher, year, and North American sales.  After seeing the steady growth in the large amount of sales soley in North America throughout the years, we can see why the video game industry is one of the biggest entertainment industries in the world.
